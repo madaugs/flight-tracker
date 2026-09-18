@@ -16,7 +16,8 @@ import Link from 'next/link'
 export default function DashboardPage() {
   const router = useRouter()
   const [year] = useState(new Date().getFullYear())
-  const [homeAirport, setHomeAirport] = useState('ORD')
+  const [homeAirport, setHomeAirport] = useState('')
+  const [profileLoaded, setProfileLoaded] = useState(false)
 
   // Auth check
   useEffect(() => {
@@ -29,6 +30,7 @@ export default function DashboardPage() {
       if (!user) return
       const { data } = await supabase.from('profiles').select('home_airport').eq('id', user.id).single()
       if (data?.home_airport) setHomeAirport(data.home_airport)
+      setProfileLoaded(true)
     })
   }, [router])
 
@@ -88,6 +90,22 @@ export default function DashboardPage() {
             {stats.totalFlights} flights · {stats.airportsVisited} airports
           </p>
         </div>
+
+        {profileLoaded && !homeAirport && (
+          <div className="card border-yellow-900/50 bg-yellow-900/10 flex items-start gap-3">
+            <Plane className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+            <div className="text-sm">
+              <p className="text-yellow-200 font-medium">Set your home airport</p>
+              <p className="text-slate-400 mt-0.5">
+                Trips and days-away are worked out from flights in and out of your home
+                airport, so they&rsquo;ll stay empty until you pick one.{' '}
+                <Link href="/settings" className="text-indigo-400 hover:text-indigo-300">
+                  Settings
+                </Link>
+              </p>
+            </div>
+          </div>
+        )}
 
         <StatCards stats={stats} />
         <YearProgress stats={stats} />

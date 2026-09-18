@@ -7,7 +7,7 @@ create extension if not exists "uuid-ossp";
 -- ── Profiles ──────────────────────────────────────────────────────────────────
 create table public.profiles (
   id           uuid primary key references auth.users(id) on delete cascade,
-  home_airport text default 'ORD',
+  home_airport text,
   display_name text,
   created_at   timestamptz default now() not null,
   updated_at   timestamptz default now() not null
@@ -60,8 +60,8 @@ create policy "Users can CRUD own trips" on public.trips for all using (auth.uid
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, home_airport)
-  values (new.id, 'ORD')
+  insert into public.profiles (id)
+  values (new.id)
   on conflict (id) do nothing;
   return new;
 end;
@@ -70,3 +70,8 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- ── Migrations ───────────────────────────────────────────────────────────────
+-- Run the files in supabase/migrations/ after this one, in order.
+-- 001_pending_flights.sql      — Gmail ingest review queue (see docs/gmail-scan.md)
+-- 002_generic_home_airport.sql — drop the baked-in home-airport default

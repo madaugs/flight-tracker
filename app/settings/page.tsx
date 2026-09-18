@@ -9,7 +9,7 @@ import { CheckCircle } from 'lucide-react'
 
 export default function SettingsPage() {
   const router = useRouter()
-  const [homeAirport, setHomeAirport] = useState('ORD')
+  const [homeAirport, setHomeAirport] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [loading, setLoading] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -22,7 +22,7 @@ export default function SettingsPage() {
       setUserId(user.id)
       const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single()
       if (data) {
-        setHomeAirport(data.home_airport ?? 'ORD')
+        setHomeAirport(data.home_airport ?? '')
         setDisplayName(data.display_name ?? '')
       }
     })
@@ -64,7 +64,7 @@ export default function SettingsPage() {
             <AirportCombobox
               value={homeAirport}
               onChange={setHomeAirport}
-              placeholder="ORD"
+              placeholder="IATA code"
             />
           </div>
 

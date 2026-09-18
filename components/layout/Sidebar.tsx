@@ -14,13 +14,16 @@ import {
   LogOut,
   Share2,
   History,
+  Inbox,
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
 import { getSupabase } from '@/lib/supabase'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { href: '/log', label: 'Log a Flight', Icon: Plus },
+  { href: '/review', label: 'Review', Icon: Inbox, badge: 'pending' as const },
   { href: '/history', label: 'History', Icon: History },
   { href: '/monthly', label: 'Monthly', Icon: BarChart3 },
   { href: '/years', label: 'Year Stats', Icon: TrendingUp },
@@ -36,6 +39,7 @@ const secondaryItems = [
 export default function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const pendingCount = usePendingCount()
 
   async function handleSignOut() {
     const supabase = getSupabase()
@@ -59,7 +63,7 @@ export default function Sidebar() {
 
       {/* Primary nav */}
       <nav className="flex-1 space-y-0.5">
-        {navItems.map(({ href, label, Icon }) => (
+        {navItems.map(({ href, label, Icon, badge }) => (
           <Link
             key={href}
             href={href}
@@ -67,6 +71,9 @@ export default function Sidebar() {
           >
             <Icon className="w-4 h-4 flex-shrink-0" />
             {label}
+            {badge === 'pending' && pendingCount > 0 && (
+              <span className="ml-auto badge-indigo">{pendingCount}</span>
+            )}
           </Link>
         ))}
       </nav>
@@ -93,4 +100,21 @@ export default function Sidebar() {
       </div>
     </aside>
   )
+}
+
+/** Count of inbox-detected flights still waiting on a yes/no. */
+function usePendingCount(): number {
+  const { data = 0 } = useQuery({
+    queryKey: ['pending-flights', 'count'],
+    queryFn: async () => {
+      const supabase = getSupabase()
+      const { count, error } = await supabase
+        .from('pending_flights')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+      if (error) throw error
+      return count ?? 0
+    },
+  })
+  return data
 }

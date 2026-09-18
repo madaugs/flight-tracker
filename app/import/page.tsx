@@ -8,8 +8,7 @@ import AppShell from '@/components/layout/AppShell'
 import ImportDropzone, { type ParsedRow } from '@/components/import/ImportDropzone'
 import ImportPreviewTable from '@/components/import/ImportPreviewTable'
 import ImportProgress from '@/components/import/ImportProgress'
-import { computeTrips } from '@/lib/trips'
-import type { Flight } from '@/types'
+import { recomputeTrips } from '@/lib/sync'
 import { CheckCircle } from 'lucide-react'
 
 const BATCH_SIZE = 50
@@ -22,7 +21,7 @@ export default function ImportPage() {
   const [importDone, setImportDone] = useState(0)
   const [importTotal, setImportTotal] = useState(0)
   const [complete, setComplete] = useState(false)
-  const [homeAirport, setHomeAirport] = useState('ORD')
+  const [homeAirport, setHomeAirport] = useState('')
   const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
@@ -69,20 +68,7 @@ export default function ImportPage() {
       setImportDone(done)
     }
 
-    // Recompute trips
-    const { data: allFlights } = await supabase
-      .from('flights')
-      .select('*')
-      .eq('user_id', userId)
-      .order('flight_date', { ascending: true })
-
-    if (allFlights) {
-      const computed = computeTrips(allFlights as Flight[], homeAirport)
-      await supabase.from('trips').delete().eq('user_id', userId)
-      if (computed.length > 0) {
-        await supabase.from('trips').insert(computed.map((t) => ({ ...t, user_id: userId })))
-      }
-    }
+    await recomputeTrips(supabase, userId, homeAirport)
 
     qc.invalidateQueries({ queryKey: ['flights'] })
     qc.invalidateQueries({ queryKey: ['trips'] })

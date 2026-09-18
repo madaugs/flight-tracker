@@ -161,8 +161,8 @@ export default function RouteMap({ routes }: RouteMapProps) {
           <Graticule stroke="#1e293b" strokeWidth={0.4} />
 
           <Geographies geography={GEO_URL}>
-            {({ geographies }) =>
-              geographies.map((geo) => (
+            {({ geographies }: { geographies: any[] }) =>
+              geographies.map((geo: any) => (
                 <Geography
                   key={geo.rsmKey}
                   geography={geo}

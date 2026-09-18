@@ -14,7 +14,7 @@ export default async function LogPage() {
     .eq('id', user.id)
     .single()
 
-  const homeAirport = profile?.home_airport ?? 'ORD'
+  const homeAirport = profile?.home_airport ?? ''
 
   return (
     <AppShell>
